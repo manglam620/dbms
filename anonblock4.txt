@@ -1,0 +1,78 @@
+CREATE TABLE Borrower (
+  Rollno int,
+    Name varchar(100),
+    DateOfIssue Date,
+    NameOfBook varchar(100),
+    Status varchar(1)
+);
+
+
+
+Desc Borrower;
+
+INSERT INTO Borrower Values(101,'Ajay','01-JAN-2023','To kill a mockingbird','I');
+INSERT INTO Borrower Values(102,'Om','09-AUG-2023','War and Peace','I');
+INSERT INTO Borrower Values(103,'Priya','01-OCT-2023','Great Expectations','I');
+
+CREATE TABLE Fine(
+    Rollno int,
+    IRdate Date,
+    Amt float
+);
+
+Desc Fine;
+
+
+--PROGRAM--
+DECLARE
+  DOI Borrower.DateOfIssue%TYPE;
+  bkname Borrower.NameOfBook%TYPE := 'Great Expectations';
+  rno Borrower.Rollno%TYPE := 103;
+  fine FLOAT;
+  date_diff INT;
+  invalid_rno EXCEPTION;
+
+BEGIN
+  IF rno <= 0 THEN
+    RAISE invalid_rno;
+  END IF;
+
+  -- Using TO_DATE to ensure correct date format
+  SELECT DateOfIssue INTO DOI FROM (
+    SELECT DateOfIssue
+    FROM Borrower
+    WHERE NameOfBook = bkname AND Rollno = rno
+    ORDER BY DateOfIssue DESC -- Add an ORDER BY clause to ensure only one row is fetched
+  ) WHERE ROWNUM = 1;
+
+  -- Calculating date difference in days
+  date_diff := TRUNC(SYSDATE) - TRUNC(DOI);
+
+  IF date_diff > 15 AND date_diff <= 30 THEN
+    fine := (date_diff - 15) * 5;
+  ELSIF date_diff > 30 THEN
+    fine := (15 * 5) + ((date_diff - 30) * 50);
+  ELSE
+    fine := 0;
+  END IF;
+
+  IF fine > 0 THEN
+    INSERT INTO Fine VALUES (rno, SYSDATE, fine);
+  END IF;
+
+  UPDATE Borrower
+  SET Status = 'R'
+  WHERE Rollno = rno AND NameOfBook = bkname;
+
+  DBMS_OUTPUT.PUT_LINE('Fine calculated and borrower status updated successfully.');
+
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    DBMS_OUTPUT.PUT_LINE('Book or borrower not found.');
+  WHEN invalid_rno THEN
+    DBMS_OUTPUT.PUT_LINE('Invalid RollNo');
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END;
+/
+select * from Fine

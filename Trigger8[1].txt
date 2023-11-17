@@ -1,0 +1,109 @@
+
+create Table Library(B_id int,Title varchar(90),Edition varchar(30),no_of_copies int);
+
+Insert into Library values(1,'Wings of Fire','2',5),(2,'Call of Forest','5',5),(3,'The Magic Trees','3',5);
+
+
+select * from Library;
+
+
+create table Library_audit(B_id int,Title varchar(90),Edition varchar(30),no_of_copies int,date_of_mod date,Operation varchar(30),user varchar(50));
+
+
+create table Transaction(Transaction_id int,B_id int,S_id int,Status varchar(10),irno_of_copies int,ir_date date);
+
+##Trigger For Update##
+
+
+DELIMITER //
+CREATE TRIGGER tri_update
+BEFORE UPDATE
+ON Library
+FOR EACH ROW
+BEGIN
+INSERT INTO Library_audit (B_id, Title, Edition, no_of_copies, date_of_mod, Operation, user)
+VALUES (OLD.B_id, OLD.Title, OLD.Edition, OLD.no_of_copies, CURRENT_DATE(), 'Update', CURRENT_USER());
+END;
+//
+DELIMITER ;
+
+#Trigger For Delete##
+
+DELIMITER //
+CREATE TRIGGER tri_delete
+BEFORE DELETE
+ON Library
+FOR EACH ROW
+BEGIN
+INSERT INTO Library_audit (B_id, Title, Edition, no_of_copies, date_of_mod, Operation, user)
+VALUES (OLD.B_id, OLD.Title, OLD.Edition, OLD.no_of_copies, CURRENT_DATE(), 'Delete', CURRENT_USER());
+END;
+
+//
+DELIMITER ;
+
+
+##Triggers for Number of Copies##
+
+DELIMITER //
+
+CREATE TRIGGER tri_copies
+BEFORE INSERT
+ON Transaction
+FOR EACH ROW
+BEGIN
+DECLARE copies INT;
+
+SELECT no_of_copies INTO copies
+FROM Library
+WHERE B_id = NEW.B_id;
+
+IF NEW.Status = 'I' AND NEW.irno_of_copies > copies THEN
+SET NEW.irno_of_copies = copies;
+END IF;
+END;
+//
+
+DELIMITER ;
+
+##Trigger for updating number of copies##
+
+DELIMITER //
+
+create trigger tri_update_copies
+After Insert
+on Transaction
+For Each Row
+Begin
+Declare copies int;
+select no_of_copies into copies from Library where B_id=New.B_id;
+If New.Status='I' Then update Library set
+no_of_copies=(copies-New.irno_of_copies) where B_id=New.B_id;
+Else update Library set no_of_copies=(copies+New.irno_of_copies) where
+B_id=New.B_id;
+End If;
+End; //
+
+DELIMITER ;
+
+##calling triggers##
+Insert into Transaction(B_id,S_id,Status,irno_of_copies,ir_datevalues(1,23,'I',3,Current_Date());
+
+ select * from Transaction;
+ select * from Library;
+ select * from Library_audit;
+
+Insert into Transaction (B_id,S_id,Status,irno_of_copies,ir_date) values(2,43,'I',6,Current_Date());
+
+select * from Transaction;
+select * from Library;
+select * from Library_audit;
+
+Insert into Transaction (B_id,S_id,Status,irno_of_copies,ir_date) values(1,23,'R',3,'2023-09-28');
+select * from Transaction;
+select * from Library;
+select * from Library_audit;
+
+Delete from Library where B_id=3;
+select * from Library_audit;
+

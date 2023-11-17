@@ -1,0 +1,68 @@
+Create table student(
+name varchar(30),
+total_marks int
+);
+
+
+Create table result(
+rollno int,
+name varchar(30),
+class varchar(30)
+);
+
+--Program Procedure--
+
+Delimiter //
+Create Procedure pgrade(IN rollno int,IN name varchar(30),IN marks int)
+Begin
+
+Declare class varchar(30);
+
+IF marks >= 990 AND marks <= 1500 THEN
+Set class = "Distinction";
+
+ELSEIF marks <= 989 AND marks >= 900 THEN
+Set class = "First Class";
+
+ELSEIF marks <= 899 AND marks >= 825 THEN
+Set class = "Second Class";
+
+ELSEIF marks <= 824 AND marks >= 700 THEN
+Set class = "Pass";
+
+ELSE
+SET class = "Fail";
+END IF;
+
+Insert into student values (name, marks);
+Insert into result values (rollno, name, class);
+
+END//
+Delimiter ;
+
+call pgrade(101,'Shruti',990);
+call pgrade(102,'Ajay',740);
+
+select * from student;
+
+select * from result;
+
+//to drop procedure//
+//DROP PROCEDURE IF EXISTS pgrade;//
+
+--Program For Function--
+
+DELIMITER //
+
+CREATE FUNCTION tot_stud(classname VARCHAR(30)) 
+RETURNS INT
+READS SQL DATA
+BEGIN
+DECLARE total INT; 
+SELECT COUNT(rollno) INTO total FROM result WHERE class = classname; 
+RETURN total; 
+END //
+
+DELIMITER ;
+
+SELECT tot_stud('Distinction') AS TotalStudents;

@@ -1,0 +1,104 @@
+import mysql.connector
+
+con = mysql.connector.connect(
+    user='root',
+    password='Expert123',
+    host='localhost',
+    database='db_user'
+)
+
+def insert(id, name, age, city):
+    try:
+        res = con.cursor()
+        sql = "INSERT INTO users (id, name, age, city) VALUES (%s, %s, %s, %s)"
+        user = (id, name, age, city)
+        res.execute(sql, user)
+        con.commit()
+        print("Data Insert Success")
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+
+def update(id, name, age, city):
+    try:
+        res = con.cursor()
+        sql = "UPDATE users SET name=%s, age=%s, city=%s WHERE id=%s"
+        user = (name, age, city, id)
+        res.execute(sql, user)
+        con.commit()
+        print("Data Update Success")
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+
+def select():
+    try:
+        res = con.cursor()
+        sql = "SELECT ID, NAME, AGE, CITY FROM users"
+        res.execute(sql)
+        result = res.fetchall()
+        for row in result:
+            print(row)
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+
+def delete(id):
+    try:
+        res = con.cursor()
+        sql = "DELETE FROM users WHERE id=%s"
+        user = (id,)
+        res.execute(sql, user)
+        con.commit()
+        print("Data Delete Success")
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+
+try:
+    if con.is_connected():
+        print("Connected to MySQL")
+
+    while True:
+        print("1. Insert Data")
+        print("2. Update Data")
+        print("3. Select Data")
+        print("4. Delete Data")
+        print("5. Exit")
+
+        try:
+            choice = int(input("Enter Your Choice: "))
+        except ValueError:
+            print("Invalid input. Please enter a number.")
+            continue
+
+        if choice == 1:
+            id = input("Enter The Id: ")
+            name = input("Enter Name: ")
+            age = input("Enter Age: ")
+            city = input("Enter City: ")
+            insert(id, name, age, city)
+
+        elif choice == 2:
+            id = input("Enter The Id: ")
+            name = input("Enter Name: ")
+            age = input("Enter Age: ")
+            city = input("Enter City: ")
+            update(id, name, age, city)
+
+        elif choice == 3:
+            select()
+
+        elif choice == 4:
+            id = input("Enter The Id to Delete: ")
+            delete(id)
+
+        elif choice == 5:
+            break
+
+        else:
+            print("Invalid Selection. Please Try Again!")
+
+except mysql.connector.Error as err:
+    print(f"Error: {err}")
+
+finally:
+    if con.is_connected():
+        con.close()
+        print("MySQL connection is closed")

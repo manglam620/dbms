@@ -1,0 +1,49 @@
+--Implicit Cursor--
+
+create table O_RollCall (rn int,name varchar(90),marks int);
+
+insert into O_RollCall values(5,'Pratu',30);
+insert into O_RollCall values(1,'Ajay',35);
+insert into O_RollCall values(3,'Om',40);
+
+--Program--
+    
+BEGIN
+update O_RollCall Set marks=40 where marks between 35 and 39;
+If SQL%NOTFOUND Then
+dbms_output.put_line('No records updated');
+Else
+dbms_output.put_line('Records Updated:'|| SQL%rowcount);
+END If;
+END;
+
+
+--Explicit Cursor--
+    
+create table N_RollCall (rn int,name varchar(90),marks int);
+
+insert into N_RollCall values(1,'Riya',30);
+insert into N_RollCall values(2,'Vinit',35);
+insert into N_RollCall values(3,'Ram',37);
+
+--Program--
+
+DECLARE
+s_rec N_RollCall%rowtype;
+Cursor cur_o is select * from O_RollCall;
+Cursor cur_n(rn_o int) is select * from N_RollCall where rn=rn_o;
+BEGIN
+
+For s_rec in cur_o
+LOOP
+open cur_n(s_rec.rn);
+Fetch cur_n into s_rec;
+If cur_n%NOTFOUND THEN
+Insert into N_RollCall values(s_rec.rn,s_rec.name,s_rec.marks);
+END If;
+Close cur_n;
+End LOOP;
+End;
+
+
+select * from N_RollCall;

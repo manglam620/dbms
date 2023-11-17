@@ -1,0 +1,124 @@
+db.createCollection("orders")
+
+ --insert--
+db.orders.insertMany([
+ {
+ "_id" : 1,
+ "cust_id" : "A1",
+ "DOR" : ISODate("2023-01-05T00:00:00Z"),
+ "price" : 100,
+ "items" : [
+{
+ "sku" : "oranges",
+ "qty" : 5,
+ "price" : 10
+ },
+ {
+"sku" : "apples",
+ "qty" : 5,
+ "price" : 10
+ }
+ ],
+ "status" : "P"
+ },
+
+ {
+ "_id" : 2,
+ "cust_id" : "A2",
+ "DOR" : ISODate("2023-01-20T00:00:00Z"),
+ "price" : 200,
+ "items" : [
+ {
+ "sku" : "oranges",
+ "qty" : 10,
+ "price" : 10
+ },
+ {
+ "sku" : "apples",
+ "qty" : 10,
+ "price" : 10
+ }
+ ],
+ "status" : "P"
+ },
+ {
+ "_id" : 3,
+ "cust_id" : "A2",
+ "DOR" : ISODate("2023-01-25T00:00:00Z"),
+ "price" : 200,
+ "items" : [
+ {
+ "sku" : "oranges",
+ "qty" : 10,
+ "price" : 10
+ },
+{
+ "sku" : "apples",
+ "qty" : 10,
+"price" : 10
+ }
+ ],
+ "status" : "D"
+ },
+ {
+ "_id" : 4,
+ "cust_id" : "A4",
+ "DOR" : ISODate("2023-01-29T00:00:00Z"),
+ "price" : 350,
+
+ "items" : [
+ {
+ "sku" : "oranges",
+ "qty" : 10,
+ "price" : 25
+ },
+ {
+ "sku" : "apples",
+ "qty" : 10,
+"price" : 10
+ }
+],
+ "status" : "D"
+ }])
+
+
+db.orders.find().pretty()
+
+--1st Query
+ var map=function(){emit(this.cust_id,this.price);};
+ var reduce=function(cust_id,price){return Array.sum(price);};
+ db.orders.mapReduce(map,reduce,{out:'result1'})
+  
+
+ db.result1.find()
+ 
+--2nd Query--
+
+var map=function(){emit(this.cust_id,this.price);};
+var reduce=function(cust_id,price){return Array.sum(price);};
+ 
+db.orders.mapReduce(map,reduce,{out:'result', query:{status:"D"}})
+
+db.result2.find()
+
+
+--3rd query--
+var map=function(){emit(this.cust_id,this.price);};
+ 
+var reduce=function(cust_id,price){return Array.sum(price);};
+ 
+db.orders.mapReduce(map,reduce,{out:'result3', query:{status:"P"}})
+
+
+db.result3.find()
+
+--4th Query--
+var map=function(){for(var k in this){emit(k,{count:1})};};
+
+ var reduce=function(keys,count){total=0;
+ for(i in count){total+=count[i].count};return {countK:total};}
+
+ db.orders.mapReduce(map,reduce,{out:'new3'})
+
+
+ db.new3.find()
